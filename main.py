@@ -1,6 +1,7 @@
+import csv
 from os import system, name
 import pandas as pd
-import tabulate
+from tabulate import tabulate
 
 
 def clear():
@@ -11,8 +12,12 @@ def clear():
         _ = system('clear')
 
 
-def operate_excel(file_to_open):
-    xl = pd.ExcelFile(file_to_open)
+def pretty_print(data):
+    print(tabulate(data, headers='key', tablefmt='psql'))
+
+
+def operate_excel(excel_to_open):
+    xl = pd.ExcelFile(excel_to_open)
     number_of_sheets = len(xl.sheet_names)
 
     if number_of_sheets > 1:
@@ -31,14 +36,16 @@ def operate_excel(file_to_open):
 
             try:
                 clear()
+
                 if int(sheet_choice) == len_of_sheet_list + 1:
-                    data_df = pd.read_excel(file_to_open, sheet_name=None)
-                    print(data_df)
+                    data_df = pd.read_excel(excel_to_open, sheet_name=None)
+                    pretty_print(data_df)
+
                 elif int(sheet_choice) == len_of_sheet_list + 2:
                     break
 
-                data_df = pd.read_excel(file_to_open, sheet_name=xl.sheet_names[int(sheet_choice)-1])
-                print(data_df)
+                data_df = pd.read_excel(excel_to_open, sheet_name=xl.sheet_names[int(sheet_choice) - 1])
+                pretty_print(data_df)
 
             except ValueError:
                 print('Incorrect value! Try again')
@@ -47,29 +54,44 @@ def operate_excel(file_to_open):
                 print('Option is out of range. Try again')
 
     else:
-        data_df = pd.read_excel(file_to_open)
-        print(data_df)
+        data_df = pd.read_excel(excel_to_open)
+        pretty_print(data_df)
+
+
+def operate_json(json_to_open):
+    clear()
+    data_df = pd.read_json(json_to_open)
+    pretty_print(data_df)
+
+
+def operate_csv(csv_to_open):
+    clear()
+    with open(csv_to_open) as csv_file:
+        columns = list(csv.reader(csv_file, delimiter=';'))
+        pretty_print(columns)
 
 
 def main(path_to_file):
+    clear()
     extension = path_to_file.strip().split('.')[-1]
 
     if extension == 'json':
-        
-        try:
-            data_df = pd.read_json(path_to_file.strip())
-            print(data_df)
-
-        except ValueError:
-            print('Something wrong with this json file.')
+        operate_json(path_to_file.strip())
 
     if extension == 'csv':
-        pass
+        operate_csv(path_to_file.strip())
 
     if extension == 'xlsx' or extension == 'xls':
         operate_excel(path_to_file.strip())
 
 
-user_filepath = input('''Enter the path to open file (csv, xlsx, json)
+while True:
+    clear()
+    user_filepath = input('''Enter the path to open file (csv, xlsx, json)
+For exit, type 'exit'
 Path to file: ''')
-main(user_filepath)
+
+    if user_filepath.strip().lower() == 'exit':
+        break
+
+    main(user_filepath)
